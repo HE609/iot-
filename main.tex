@@ -1,0 +1,31 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage[top=2.5cm,bottom=2.5cm,left=3cm,right=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,graphicx,booktabs,tabularx,hyperref,float,enumitem,xcolor}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue}
+\usepackage{setspace}\onehalfspacing
+\graphicspath{{figures/}}
+\ctexset{section/format=\Large\bfseries\centering,
+         subsection/format=\large\bfseries,
+         subsubsection/format=\normalsize\bfseries}
+\title{\textbf{低空物联网场景下的5G-A通感一体化技术：\\标准、关键技术与应用}}
+\author{倪云鹤\quad 刘知愉\quad 迟百馨\quad 刘志博文\\[6pt] 电子科技大学}
+\date{2026年5月}
+\begin{document}
+\maketitle\thispagestyle{empty}\newpage
+\setcounter{page}{1}
+\tableofcontents\newpage
+
+\begin{abstract}
+通信感知一体化（ISAC）是5G-Advanced阶段最具代表性的演进技术之一。本报告聚焦低空物联网场景，围绕"低空需求$\to$感知原理$\to$标准进展$\to$IoT平台架构$\to$产业应用"这一主线，对5G-A通感一体化技术进行了系统性的研讨分析。报告推导了OFDM雷达信号模型与2D-FFT距离-速度联合估计算法，基于5G NR n79频段参数进行了仿真验证；系统梳理了3GPP R18/R19/R20中ISAC标准化进展（TR 22.837, TR 38.857）；重点设计了感知数据从物理层到应用层的端到端IoT系统架构，并对MQTT、CoAP、LwM2M等物联网协议进行了选型分析；最后对三大运营商的低空试点进行了对比分析。
+\end{abstract}
+\textbf{关键词：}通信感知一体化；5G-Advanced；OFDM雷达；低空物联网；系统架构
+
+\input{ch1_intro}
+\input{ch2_algorithm}
+\input{ch3_standard}
+\input{ch4_iot}
+\input{ch5_application}
+\input{ch6_outlook}
+
+\input{references}
+\end{document}

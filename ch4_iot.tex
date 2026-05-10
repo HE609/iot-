@@ -1,0 +1,85 @@
+\section{感知数据接入IoT平台的系统架构}
+
+本章是报告最体现物联网系统视角的核心章节。ISAC的感知数据不应停留在物理层，而应上升至平台层和应用层驱动低空业务逻辑。
+
+\subsection{端到端系统架构设计}
+
+低空物联网通感一体化系统采用五层架构（图\ref{fig:arch}），自下而上分别为目标层、感知层、网络层、平台层和应用层。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{iot_architecture.png}
+  \caption{低空物联网通感一体化系统五层架构}
+  \label{fig:arch}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{目标层}：包括合作目标（已注册配送/物流无人机、eVTOL）和非合作目标（黑飞无人机），不同类型目标具有不同的RCS特征（$-20\sim-5$\,dBsm）和运动模式。
+  \item \textbf{感知层}：5G-A基站配备感知处理单元，执行OFDM信号收发、2D-FFT和CFAR检测，输出目标参数集$\{$位置, 速度, 航向, RCS, 时间戳$\}$。
+  \item \textbf{网络层}：5G核心网中新增感知功能网元（Sensing Function, SF），管理感知会话并将数据通过标准接口上报。
+  \item \textbf{平台层}：低空智联网平台，包含数据接入网关、时序数据库（如InfluxDB/TDengine）、规则引擎（地理围栏/禁飞区判定）和API开放接口。
+  \item \textbf{应用层}：面向终端用户的业务应用——非法入侵报警、航路规划与避障、数字孪生可视化、物流调度优化。
+\end{itemize}
+
+\subsection{感知数据模型与上报流程}
+
+感知数据的标准化是实现跨平台互通的基础。本文设计的感知数据字段结构如下（以JSON格式封装）：
+
+\begin{verbatim}
+{
+  "target_id": "UAV-0037",
+  "timestamp": "2025-05-10T08:30:00Z",
+  "position": {"lat": 22.5431, "lon": 114.0579, "alt": 85.2},
+  "velocity": {"vx": 5.2, "vy": -3.1, "vz": 0.3},
+  "rcs_dbsm": -15.2,
+  "confidence": 0.92,
+  "cell_id": "460-00-12345-67"
+}
+\end{verbatim}
+
+上报频率根据场景需求差异化设计：高精度配送场景（$<$120\,m）采用1\,Hz；入侵检测场景需要更高实时性，采用10\,Hz；城际飞行场景（300--600\,m）采用0.5\,Hz。
+
+\subsection{物联网通信协议选型分析}
+
+感知数据的上报协议直接影响系统的实时性、可靠性和可扩展性。针对低空物联网场景，本文对四种主流物联网协议进行对比分析，如表\ref{tab:protocol}所示。
+
+\begin{table}[H]
+\centering\caption{物联网通信协议对比分析}\label{tab:protocol}
+\begin{tabular}{lcccc}
+\toprule
+特性 & \textbf{MQTT} & \textbf{CoAP} & \textbf{LwM2M} & \textbf{HTTP/REST} \\
+\midrule
+传输层 & TCP & UDP & UDP(CoAP) & TCP \\
+通信模式 & 发布/订阅 & 请求/响应 & 请求/响应+观察 & 请求/响应 \\
+消息开销 & 小(2B头) & 极小(4B头) & 小 & 大 \\
+QoS支持 & 3级 & CON/NON & 继承CoAP & 无原生 \\
+设备管理 & 无 & 无 & \textbf{内置} & 无 \\
+安全性 & TLS & DTLS & DTLS & TLS \\
+适用场景 & 数据汇聚 & 受限设备 & 设备全生命周期 & 管理/查询 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+综合分析，推荐以下协议组合方案：
+\begin{itemize}
+  \item \textbf{感知数据上报}：采用\textbf{MQTT}协议。其发布/订阅模式天然适合"多基站→平台"的多对一数据汇聚，QoS分级机制可根据场景灵活选择可靠性级别（入侵告警用QoS 2确保不丢失，常规轨迹用QoS 0降低延迟）。
+  \item \textbf{基站感知能力管理}：采用\textbf{LwM2M}协议。其内置的设备注册、固件升级、资源观察等设备管理功能，可用于远程配置基站的感知参数（如CFAR阈值、上报频率）。
+  \item \textbf{应用层API}：采用\textbf{HTTP/RESTful}接口，供第三方开发者查询轨迹数据和订阅告警事件。
+\end{itemize}
+
+此外，在与现有低空飞行管理体系对接方面，需考虑与UTM（Unmanned Traffic Management）/ U-Space系统的北向接口兼容。UTM系统通常采用RESTful API和WebSocket进行飞行计划提交与实时态势共享，ISAC感知平台的输出应按照UTM标准数据格式封装，实现与空域管理系统的无缝对接。
+
+\subsection{多站协同感知与数据融合}
+
+单站感知存在遮挡盲区和角度模糊等局限性。多基站协同感知分为两个层级：
+
+\textbf{检测级融合}：各基站独立完成目标检测后，将检测结果上报至融合中心。融合中心通过航迹关联算法（如最近邻法/JPA全局最优关联法）将不同基站对同一目标的检测结果进行关联匹配。
+
+\textbf{轨迹级融合}：对关联后的多源观测数据，使用扩展卡尔曼滤波（EKF）进行状态估计。目标状态向量$\mathbf{x}_k = [x, y, z, \dot{x}, \dot{y}, \dot{z}]^T$，状态转移方程为：
+\begin{equation}
+  \mathbf{x}_{k+1} = \mathbf{F}\mathbf{x}_k + \mathbf{w}_k, \quad \mathbf{z}_k = \mathbf{H}\mathbf{x}_k + \mathbf{v}_k
+\end{equation}
+其中$\mathbf{F}$为匀速运动模型的状态转移矩阵，$\mathbf{H}$为观测矩阵。实测数据表明，三站协同可将定位精度从单站的10\,m量级提升至3\,m以内。
+
+\subsection{本章小结}
+本章设计了低空物联网通感一体化的五层系统架构，定义了感知数据模型，对MQTT/CoAP/LwM2M等物联网协议进行了选型分析，并讨论了多站协同感知的数据融合方案，实现了从物理层感知到应用层服务的完整闭环。

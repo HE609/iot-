@@ -1,0 +1,50 @@
+\section{3GPP标准化进展}
+
+ISAC的标准化工作由3GPP主导推进，贯穿5G-A到6G的多个Release版本。本章系统梳理其演进路线，重点关注与低空感知相关的标准项目。
+
+\subsection{R18：感知场景需求预研}
+
+3GPP R18作为5G-Advanced的首个版本（2024年6月功能冻结），启动了感知场景与需求的Study Item（SI）。核心标准文档为\textbf{TR 22.837}~\cite{tr22837}《Feasibility Study on Integrated Sensing and Communication》，该文档定义了6大典型感知用例：
+
+\begin{enumerate}[label=(\arabic*)]
+  \item \textbf{入侵检测与监控}——室内外非授权目标探测
+  \item \textbf{无人机跟踪与监管}——低空飞行器实时定位（\textbf{最高优先级}）
+  \item \textbf{天气监测}——利用回波信号估计降雨率
+  \item \textbf{道路使用者定位}——V2X场景中的行人/车辆感知
+  \item \textbf{睡眠监测}——室内毫米波呼吸/心跳检测
+  \item \textbf{手势识别}——近场人机交互
+\end{enumerate}
+
+其中，无人机跟踪与低空入侵检测被确定为最高优先级场景。TR 22.837中定义的典型KPI要求包括：定位精度$<$10\,m、速度估计精度$<$1\,m/s、探测距离$>$1\,km、刷新率$>$1\,Hz。该SI由华为担任Rapporteur，高通、爱立信、中兴等主要设备商参与。
+
+\subsection{R19：ISAC信道建模研究}
+
+R19（预计2025年功能冻结）将ISAC信道建模列为重点Work Item。核心标准文档为\textbf{TR 38.857}~\cite{tr38857}《Study on NR-based Sensing》。感知信道与传统通信信道存在本质差异：通信信道建模关注多径传播的统计特性（如时延扩展、角度扩展），而感知信道需要精确描述目标的确定性散射特性。
+
+TR 38.857定义了6种感知操作模式：
+\begin{itemize}
+  \item \textbf{Mono-static sensing}（单站感知）：同一基站发射和接收，最简单但受自干扰限制
+  \item \textbf{Bi-static sensing}（双站感知）：不同基站分别发射和接收，避免自干扰但需严格同步
+  \item \textbf{Multi-static sensing}（多站感知）：多个基站协同，提供空间分集增益
+  \item \textbf{UE-assisted sensing}：终端辅助的感知模式
+  \item \textbf{UE-based sensing}：终端独立完成感知处理
+  \item \textbf{Network-assisted sensing}：网络侧提供感知辅助信息
+\end{itemize}
+
+R19的研究重点还包括：感知参考信号（SRS-like sensing RS）设计方案、目标RCS角度依赖性建模（Swerling I--IV模型的扩展）、以及感知与通信在资源分配层面的协调机制。
+
+\subsection{R20及6G演进路线}
+
+R20阶段（2026年启动）已将集成感知确定为5G-A继续演进的核心方向之一，计划制定ISAC的功能规范（Normative Work）和空口协议。具体包括：感知会话管理流程、感知能力协商机制、感知结果上报接口规范等。
+
+在更长远的6G愿景中，国际电信联盟（ITU）已在IMT-2030框架中将通信感知一体化确认为6G的\textbf{三大新增核心能力}之一（另外两个为AI原生和数字孪生）。6G的目标是实现\textbf{原生感知}——在系统设计之初就将感知作为基本能力纳入，而非5G-A阶段的"叠加式"方案。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{3gpp_timeline.png}
+  \caption{3GPP ISAC标准化演进路线}
+  \label{fig:timeline}
+\end{figure}
+
+\subsection{本章小结}
+3GPP的ISAC标准化遵循"场景定义（R18 TR 22.837）$\to$信道建模（R19 TR 38.857）$\to$功能规范（R20）$\to$原生感知（6G）"的演进路径。当前处于信道建模和功能预研的关键阶段，预计在6G时代（2030年前后）实现原生通感融合。

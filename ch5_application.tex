@@ -1,0 +1,78 @@
+\section{低空应用案例与部署分析}
+
+\subsection{三大运营商低空试点对比}
+
+截至2025年，国内三大运营商均已布局低空通感一体方案，进展情况如表\ref{tab:operator}所示。
+
+\begin{table}[H]
+\centering\caption{三大运营商低空通感一体试点对比}\label{tab:operator}
+\begin{tabular}{lccc}
+\toprule
+维度 & 中国移动 & 中国电信 & 中国联通/中兴 \\
+\midrule
+合作伙伴 & 美团 & 华为 & 中兴通讯 \\
+典型场景 & 低空外卖配送 & 医疗物资配送 & 黑飞无人机监测 \\
+部署城市 & 深圳 & 武汉、上海 & 全国25省 \\
+试点规模 & 30+航线, 30万+订单 & 多城试点 & 80+试点项目 \\
+感知频段 & 4.9\,GHz (n79) & 4.9\,GHz & 4.9\,GHz \\
+感知距离 & $\sim$1.5\,km & $\sim$1.2\,km & $\sim$2\,km \\
+获奖 & — & 2025 GSMA大奖 & 规模最大 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{operator_comparison.png}
+  \caption{三大运营商低空试点部署对比}
+  \label{fig:operator}
+\end{figure}
+
+中国移动与美团合作的深圳低空外卖配送项目最具产业示范意义：已开通30余条航线、累计完成超30万单配送订单，实现了从技术验证到规模化商业运营的跨越。中国电信联合华为的5G无人机医疗配送方案荣获2025年GSMA全球移动大奖。中兴通讯在覆盖广度上领先，已在25个省市完成超80个试点项目。
+
+\subsection{ISAC与传统雷达方案对比}
+
+从六个维度对ISAC方案与传统专用雷达进行综合对比，如表\ref{tab:vs}和图\ref{fig:radar}所示。
+
+\begin{table}[H]
+\centering\caption{ISAC与传统雷达方案综合对比}\label{tab:vs}
+\begin{tabular}{lcc}
+\toprule
+维度 & 5G-A ISAC方案 & 专用雷达方案 \\
+\midrule
+部署成本 & 低（复用基站，增量$<$10\%） & 高（单套数百万元） \\
+覆盖密度 & 高（城区站间距$\sim$200\,m） & 低（雷达站稀疏） \\
+距离分辨率 & $\sim$1.5\,m (100\,MHz) & $\sim$0.15\,m (1\,GHz) \\
+低慢小检测 & 适中 & 较好 \\
+通信能力 & 原生支持 & 无 \\
+组网能力 & 强（天然联网） & 弱（需额外回传） \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\textwidth]{isac_vs_radar.png}
+  \caption{ISAC与传统雷达综合性能雷达图}
+  \label{fig:radar}
+\end{figure}
+
+ISAC方案在部署成本、覆盖密度、通信能力和组网能力等维度具有显著优势，适合\textbf{广域低空监管}；传统雷达在距离精度和低慢小目标检测方面仍占优，适合\textbf{要地防护}。两者并非替代关系，而是可以形成互补的协同监管体系。
+
+\subsection{不同高度层的感知需求}
+
+\begin{table}[H]
+\centering\caption{不同高度层的感知需求分析}\label{tab:altitude}
+\begin{tabular}{ccccc}
+\toprule
+高度层 & 应用场景 & 典型目标 & 定位精度 & 刷新率 \\
+\midrule
+$<$120\,m & 外卖/快递配送 & 小型多旋翼 & $<$3\,m & 1\,Hz \\
+120--300\,m & 物流运输/巡检 & 中型固定翼 & $<$10\,m & 0.5\,Hz \\
+300--600\,m & 城际飞行/eVTOL & 载人飞行器 & $<$20\,m & 0.2\,Hz \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{本章小结}
+国内三大运营商的试点实践表明，ISAC低空方案已从概念验证进入规模化试点部署阶段。ISAC方案在广域覆盖和成本效益方面具有不可替代的优势，与传统雷达形成互补格局。

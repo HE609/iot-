@@ -1,0 +1,104 @@
+\section{ISAC感知原理与关键算法}
+
+本章从OFDM雷达信号模型出发，推导距离和速度的联合估计算法，并基于5G NR n79频段的参数进行仿真验证。
+
+\subsection{OFDM雷达信号模型}
+
+考虑一个OFDM雷达系统，发射信号由$N$个OFDM符号组成，每个符号包含$M$个子载波。第$n$个符号的发射基带信号可表示为：
+\begin{equation}
+  s_n(t) = \sum_{m=0}^{M-1} d[n,m] \cdot e^{j2\pi m \Delta f (t - nT_{\mathrm{sym}})}
+  \label{eq:tx}
+\end{equation}
+其中$d[n,m]$为第$n$个符号第$m$个子载波上的调制符号（如QPSK），$\Delta f$为子载波间隔，$T_{\mathrm{sym}}$为OFDM符号周期（含循环前缀CP）。
+
+当信号照射到距离为$R$、径向速度为$v$的运动目标时，回波信号经历时延$\tau = 2R/c$和多普勒频移$f_d = 2v/\lambda$。接收端经下变频和去CP后，第$n$个符号第$m$个子载波上的接收信号为：
+\begin{equation}
+  y[n,m] = \alpha \cdot d[n,m] \cdot e^{-j2\pi m \Delta f \tau} \cdot e^{j2\pi f_d n T_{\mathrm{sym}}} + w[n,m]
+  \label{eq:rx}
+\end{equation}
+其中$\alpha$为包含路径损耗和目标RCS的复衰减系数，$w[n,m]$为加性高斯白噪声。式\eqref{eq:rx}中，第一个指数项$e^{-j2\pi m \Delta f \tau}$包含距离信息，第二个指数项$e^{j2\pi f_d n T_{\mathrm{sym}}}$包含速度信息。
+
+\subsection{2D-FFT距离-速度联合估计算法}
+
+为提取感知参数，首先进行\textbf{倒频滤波}（通信符号消除）。由于发射符号$d[n,m]$已知，将接收信号逐元素除以发射符号：
+\begin{equation}
+  z[n,m] = \frac{y[n,m]}{d[n,m]} = \alpha \cdot e^{-j2\pi m \Delta f \tau} \cdot e^{j2\pi f_d n T_{\mathrm{sym}}} + w'[n,m]
+  \label{eq:demod}
+\end{equation}
+
+倒频滤波后的矩阵$\mathbf{Z} \in \mathbb{C}^{N \times M}$可分解为两个独立的相位旋转分量。据此，可通过二维FFT实现距离和速度的联合估计：
+
+\begin{enumerate}[label=\textbf{Step \arabic*:}]
+  \item \textbf{距离估计}——沿子载波维度（$m$方向）做IFFT：
+  \begin{equation}
+    \hat{R} = \frac{c \cdot \hat{k}_m}{2M\Delta f}, \quad \text{距离分辨率} \quad \Delta r = \frac{c}{2B}
+  \end{equation}
+  其中$B = M\Delta f$为系统带宽，$\hat{k}_m$为IFFT峰值索引。
+  \item \textbf{速度估计}——沿符号维度（$n$方向）做FFT：
+  \begin{equation}
+    \hat{v} = \frac{\lambda \cdot \hat{k}_n}{2NT_{\mathrm{sym}}}, \quad \text{速度分辨率} \quad \Delta v = \frac{\lambda}{2NT_{\mathrm{sym}}}
+  \end{equation}
+  \item \textbf{CFAR检测}——在二维距离-多普勒图上使用恒虚警率检测算法自适应设定阈值，提取目标参数。
+\end{enumerate}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{signal_processing_flow.png}
+  \caption{OFDM雷达感知信号处理流程}
+  \label{fig:flow}
+\end{figure}
+
+\subsection{仿真参数与结果}
+
+基于5G NR n79频段（4.9\,GHz）的标准参数进行仿真验证，具体参数如表\ref{tab:param}所示。
+
+\begin{table}[H]
+\centering\caption{OFDM雷达仿真参数（5G NR n79）}\label{tab:param}
+\begin{tabular}{cccc}
+\toprule
+参数 & 符号 & 数值 & 说明 \\
+\midrule
+载波频率 & $f_c$ & 4.9\,GHz & n79频段 \\
+子载波间隔 & $\Delta f$ & 30\,kHz & NR标准SCS \\
+系统带宽 & $B$ & 100\,MHz & 3276个子载波 \\
+OFDM符号数 & $N$ & 14 & 1个时隙(0.5\,ms) \\
+距离分辨率 & $\Delta r$ & 1.50\,m & $c/(2B)$ \\
+最大探测距离 & $R_{\max}$ & 5000\,m & $c/(2\Delta f)$ \\
+速度分辨率(单时隙) & $\Delta v$ & 4.4\,m/s & 多时隙累积 \\
+最大不模糊速度 & $v_{\max}$ & 30.6\,m/s & $\lambda/(4T_{\mathrm{sym}})$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+仿真设置了4个典型低空目标：配送无人机（800\,m, 12\,m/s）、巡检无人机（1500\,m, $-$8\,m/s）、黑飞无人机（2200\,m, 18\,m/s）和eVTOL飞行器（3500\,m, $-$25\,m/s）。图\ref{fig:rdm}展示了2D-FFT处理后的距离-多普勒图，4个目标均被正确检测并定位。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{range_doppler_map.png}
+  \caption{OFDM雷达Range-Doppler Map仿真结果（5G NR n79, 4.9\,GHz）}
+  \label{fig:rdm}
+\end{figure}
+
+\subsection{性能边界与局限性分析}
+
+上述仿真中需要注意两个性能边界问题：
+
+\textbf{（1）速度分辨率与多普勒混叠。}单时隙（$N=14$符号，0.5\,ms）下速度分辨率为$\Delta v \approx 4.4$\,m/s，对于低速多旋翼无人机（悬停速度$<$2\,m/s）的区分能力不足。同时，最大不模糊速度$v_{\max}=30.6$\,m/s，仿真中eVTOL的速度$-25$\,m/s已接近此边界，若目标速度超过$v_{\max}$将发生多普勒混叠。实际系统中，通过\textbf{多时隙相参积累}（如累积8个时隙，$N_{\mathrm{total}}=112$）可将速度分辨率提升至$\Delta v \approx 0.55$\,m/s，同时结合\textbf{交错PRF}技术可扩展不模糊速度范围。
+
+\textbf{（2）距离-速度耦合。}OFDM波形的模糊函数在距离-多普勒平面上呈二维sinc形状，通信符号的随机性导致旁瓣电平较高（约$-13$\,dB），在强目标附近可能遮蔽弱目标。可通过发射符号的序列优化（如Zadoff-Chu序列）或加窗处理降低旁瓣。
+
+\subsection{自干扰消除技术}
+
+ISAC系统面临的关键工程挑战是自干扰问题。基站发射功率（约46\,dBm）与回波功率（可低至$-100$\,dBm以下）之间存在超过140\,dB的动态范围差异。自干扰消除采用三级级联架构：
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth]{sic_architecture.png}
+  \caption{自干扰消除（SIC）三级架构}
+  \label{fig:sic}
+\end{figure}
+
+空间域隔离通过天线物理分离和极化隔离实现约30\,dB抑制；射频域消除利用模拟对消电路实现约30\,dB抑制；数字域消除通过自适应滤波和非线性建模实现约40\,dB抑制。三级总消除量需$\geq$100\,dB。其中数字域消除最具挑战性，因为功率放大器（PA）的非线性效应和I/Q不平衡会产生难以建模的残余干扰分量。
+
+\subsection{本章小结}
+本章建立了OFDM雷达信号模型，推导了基于2D-FFT的距离-速度联合估计算法，通过仿真验证了5G NR参数下的感知性能满足低空无人机探测需求，同时分析了速度分辨率局限性和自干扰消除这两个关键技术挑战。
