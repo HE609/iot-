@@ -53,7 +53,7 @@
 基于5G NR n79频段（4.9\,GHz）的标准参数进行仿真验证，具体参数如表\ref{tab:param}所示。
 
 \begin{table}[H]
-\centering\caption{OFDM雷达仿真参数（5G NR n79）}\label{tab:param}
+\centering\caption{OFDM雷达仿真参数（5G NR n79，跨时隙慢时间多普勒处理）}\label{tab:param}
 \begin{tabular}{cccc}
 \toprule
 参数 & 符号 & 数值 & 说明 \\
@@ -61,11 +61,12 @@
 载波频率 & $f_c$ & 4.9\,GHz & n79频段 \\
 子载波间隔 & $\Delta f$ & 30\,kHz & NR标准SCS \\
 系统带宽 & $B$ & 100\,MHz & 3276个子载波 \\
-OFDM符号数 & $N$ & 14 & 1个时隙(0.5\,ms) \\
+每时隙符号数 & $N_{\mathrm{sym}}$ & 14 & 时隙周期$T_{\mathrm{slot}}\approx0.5$\,ms \\
+CPI时隙数 & $N_{\mathrm{CPI}}$ & 14 & 相参积累时长$\approx7$\,ms \\
 距离分辨率 & $\Delta r$ & 1.50\,m & $c/(2B)$ \\
 最大探测距离 & $R_{\max}$ & 5000\,m & $c/(2\Delta f)$ \\
-速度分辨率(单时隙) & $\Delta v$ & 4.4\,m/s & 多时隙累积 \\
-最大不模糊速度 & $v_{\max}$ & 30.6\,m/s & $\lambda/(4T_{\mathrm{sym}})$ \\
+速度分辨率 & $\Delta v$ & 4.4\,m/s & $\lambda/(2N_{\mathrm{CPI}}T_{\mathrm{slot}})$ \\
+最大不模糊速度 & $v_{\max}$ & 30.6\,m/s & $\lambda/(4T_{\mathrm{slot}})$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -81,9 +82,13 @@ OFDM符号数 & $N$ & 14 & 1个时隙(0.5\,ms) \\
 
 \subsection{性能边界与局限性分析}
 
-上述仿真中需要注意两个性能边界问题：
+上述仿真采用\textbf{跨时隙慢时间处理}：在每个时隙内对$N_{\mathrm{sym}}=14$个OFDM符号做相参积累得到一路距离剖面，再对$N_{\mathrm{CPI}}=14$个时隙的距离剖面序列做慢时间FFT，从而获得速度估计。需要注意以下两个性能边界问题：
 
-\textbf{（1）速度分辨率与多普勒混叠。}单时隙（$N=14$符号，0.5\,ms）下速度分辨率为$\Delta v \approx 4.4$\,m/s，对于低速多旋翼无人机（悬停速度$<$2\,m/s）的区分能力不足。同时，最大不模糊速度$v_{\max}=30.6$\,m/s，仿真中eVTOL的速度$-25$\,m/s已接近此边界，若目标速度超过$v_{\max}$将发生多普勒混叠。实际系统中，通过\textbf{多时隙相参积累}（如累积8个时隙，$N_{\mathrm{total}}=112$）可将速度分辨率提升至$\Delta v \approx 0.55$\,m/s，同时结合\textbf{交错PRF}技术可扩展不模糊速度范围。
+\textbf{（1）速度分辨率与多普勒混叠。}在$N_{\mathrm{CPI}}=14$时隙、积累时长约7\,ms的条件下，速度分辨率为
+\[
+  \Delta v = \frac{\lambda}{2N_{\mathrm{CPI}}T_{\mathrm{slot}}} \approx 4.4\,\text{m/s}
+\]
+对于悬停或低速多旋翼无人机（$<$2\,m/s）的分辨能力仍有限，可通过增大$N_{\mathrm{CPI}}$进一步改善。最大不模糊速度$v_{\max}=\lambda/(4T_{\mathrm{slot}})\approx30.6$\,m/s，仿真中eVTOL的速度$-25$\,m/s已接近此边界，若目标速度超过$v_{\max}$将发生多普勒折叠。实际系统中可结合\textbf{交错PRF}技术（改变时隙发射间隔）扩展不模糊速度范围。
 
 \textbf{（2）距离-速度耦合。}OFDM波形的模糊函数在距离-多普勒平面上呈二维sinc形状，通信符号的随机性导致旁瓣电平较高（约$-13$\,dB），在强目标附近可能遮蔽弱目标。可通过发射符号的序列优化（如Zadoff-Chu序列）或加窗处理降低旁瓣。
 
